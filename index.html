@@ -3,433 +3,1052 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kali Linux Web Interface</title>
+    <title>Kali Linux 2025</title>
     <style>
-        /* CSS Reset */
+        /* Global Styles */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Courier New', monospace;
+            font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
         }
 
         body {
-            background-color: #000;
-            color: #0f0;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
             height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* Desktop */
+        .desktop {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 40px);
+            background-image: url('https://www.kali.org/images/wallpapers/kali-2021-4-dark.png');
+            background-size: cover;
+            background-position: center;
             overflow: hidden;
         }
 
-        /* Terminal Style */
-        .terminal {
+        /* Desktop Icons */
+        .desktop-icons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 80px;
+            cursor: pointer;
+            text-align: center;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .desktop-icon img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 5px;
+        }
+
+        /* Panel (Taskbar) */
+        .panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
             width: 100%;
-            height: 100%;
-            padding: 20px;
+            height: 40px;
+            background-color: rgba(40, 40, 40, 0.9);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            border-top: 1px solid #555;
+        }
+
+        .panel-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-center {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .panel-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-item {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .panel-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .panel-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .time {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        /* Applications Menu */
+        .applications-menu {
+            position: absolute;
+            bottom: 50px;
+            left: 10px;
+            width: 300px;
+            max-height: 500px;
+            background-color: rgba(50, 50, 50, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 1001;
+            backdrop-filter: blur(10px);
+            border: 1px solid #555;
+        }
+
+        .applications-menu.active {
+            display: flex;
+        }
+
+        .search-box {
+            padding: 10px;
+            border-bottom: 1px solid #555;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+        }
+
+        .categories {
+            display: flex;
+            border-bottom: 1px solid #555;
+        }
+
+        .category {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .category.active {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid #4caf50;
+        }
+
+        .applications-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 5px;
+        }
+
+        .application-group {
+            margin-bottom: 15px;
+        }
+
+        .group-title {
+            padding: 5px 10px;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .applications {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+        }
+
+        .application {
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .application:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .application img {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 5px;
+        }
+
+        /* Windows */
+        .window {
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            width: 800px;
+            height: 500px;
+            background-color: rgba(40, 40, 40, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            border: 1px solid #555;
+            overflow: hidden;
+            display: none;
+        }
+
+        .window.active {
+            display: flex;
+        }
+
+        .window-header {
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(50, 50, 50, 0.9);
+            border-bottom: 1px solid #555;
+            cursor: move;
+        }
+
+        .window-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .window-title img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .window-control.close {
+            background-color: #ff5f56;
+        }
+
+        .window-control.minimize {
+            background-color: #ffbd2e;
+        }
+
+        .window-control.maximize {
+            background-color: #27c93f;
+        }
+
+        .window-body {
+            flex-grow: 1;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        .terminal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* Terminal */
+        .terminal-toolbar {
             padding: 5px 10px;
-            background-color: #111;
-            border-top-left-radius: 5px;
-            border-top-right-radius: 5px;
-            border-bottom: 1px solid #333;
-        }
-
-        .terminal-title {
-            font-weight: bold;
-        }
-
-        .terminal-controls {
             display: flex;
+            gap: 10px;
+            background-color: rgba(50, 50, 50, 0.9);
+            border-bottom: 1px solid #555;
         }
 
-        .control-btn {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-left: 5px;
+        .terminal-button {
+            padding: 3px 8px;
+            font-size: 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #e0e0e0;
         }
 
-        .close {
-            background-color: #ff5f56;
+        .terminal-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
         }
 
-        .minimize {
-            background-color: #ffbd2e;
-        }
-
-        .maximize {
-            background-color: #27c93f;
-        }
-
-        .terminal-body {
+        .terminal-content {
             flex-grow: 1;
-            background-color: #111;
-            padding: 15px;
+            padding: 10px;
             overflow-y: auto;
-            border-bottom-left-radius: 5px;
-            border-bottom-right-radius: 5px;
-            height: calc(100% - 30px);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #e0e0e0;
+            font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
         }
 
-        .prompt {
+        .terminal-line {
+            margin-bottom: 5px;
+            white-space: pre-wrap;
+        }
+
+        .terminal-prompt {
             display: flex;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .prompt-user {
             color: #4af;
-            margin-right: 5px;
         }
 
         .prompt-host {
             color: #f84;
-            margin-right: 5px;
         }
 
         .prompt-path {
             color: #8f8;
-            margin-right: 5px;
         }
 
         .prompt-symbol {
             margin-right: 5px;
         }
 
-        .command-input {
+        .terminal-input {
             flex-grow: 1;
             background: transparent;
             border: none;
-            color: #0f0;
+            color: #e0e0e0;
             outline: none;
+            font-family: 'DejaVu Sans Mono', 'Courier New', monospace;
+            font-size: 14px;
         }
 
-        .output {
-            margin-bottom: 10px;
-            white-space: pre-wrap;
-        }
-
-        /* Kali Menu */
-        .kali-menu {
+        /* File Manager */
+        .file-manager {
             display: flex;
-            background-color: #111;
-            padding: 5px;
-            border-bottom: 1px solid #333;
+            height: 100%;
         }
 
-        .kali-menu-item {
+        .sidebar {
+            width: 200px;
+            background-color: rgba(30, 30, 30, 0.9);
+            border-right: 1px solid #555;
+            padding: 10px 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 15px;
+        }
+
+        .sidebar-title {
             padding: 5px 15px;
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .sidebar-item {
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
             cursor: pointer;
-            position: relative;
+            font-size: 13px;
         }
 
-        .kali-menu-item:hover {
-            background-color: #333;
+        .sidebar-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .dropdown {
-            display: none;
+        .sidebar-item img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .file-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .file-toolbar {
+            padding: 5px 10px;
+            display: flex;
+            gap: 10px;
+            background-color: rgba(50, 50, 50, 0.9);
+            border-bottom: 1px solid #555;
+        }
+
+        .file-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 15px;
+            padding: 15px;
+        }
+
+        .file-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .file-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .file-item img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 5px;
+        }
+
+        .file-item-name {
+            text-align: center;
+            font-size: 12px;
+            word-break: break-all;
+        }
+
+        /* Context Menu */
+        .context-menu {
             position: absolute;
-            top: 100%;
-            left: 0;
-            background-color: #222;
-            min-width: 200px;
-            z-index: 1;
-            border: 1px solid #333;
+            background-color: rgba(50, 50, 50, 0.95);
+            border-radius: 6px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            padding: 5px 0;
+            z-index: 2000;
+            display: none;
+            min-width: 150px;
+            backdrop-filter: blur(10px);
+            border: 1px solid #555;
         }
 
-        .kali-menu-item:hover .dropdown {
+        .context-menu.active {
             display: block;
         }
 
-        .dropdown-item {
+        .context-item {
             padding: 8px 15px;
-            border-bottom: 1px solid #333;
-        }
-
-        .dropdown-item:hover {
-            background-color: #444;
-        }
-
-        /* Tool Windows */
-        .tool-window {
-            display: none;
-            position: absolute;
-            top: 100px;
-            left: 100px;
-            width: 600px;
-            height: 400px;
-            background-color: #111;
-            border: 1px solid #333;
-            border-radius: 5px;
-            z-index: 10;
-        }
-
-        .tool-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 10px;
-            background-color: #222;
-            border-bottom: 1px solid #333;
-            cursor: move;
-        }
-
-        .tool-title {
-            font-weight: bold;
-        }
-
-        .tool-close {
             cursor: pointer;
-            padding: 0 5px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .tool-body {
-            padding: 15px;
-            height: calc(100% - 30px);
-            overflow-y: auto;
+        .context-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-item img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .context-separator {
+            height: 1px;
+            background-color: #555;
+            margin: 5px 0;
+        }
+
+        /* Notifications */
+        .notification-area {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .notification {
+            width: 300px;
+            background-color: rgba(50, 50, 50, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 1px solid #555;
+            transform: translateX(100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .notification-header {
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(70, 70, 70, 0.9);
+            border-bottom: 1px solid #555;
+        }
+
+        .notification-title {
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notification-title img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .notification-close {
+            cursor: pointer;
+            padding: 3px;
+            border-radius: 3px;
+        }
+
+        .notification-close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .notification-body {
+            padding: 10px;
+            font-size: 13px;
+        }
+
+        /* Power Menu */
+        .power-menu {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            width: 200px;
+            background-color: rgba(50, 50, 50, 0.95);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            padding: 10px 0;
+            z-index: 1001;
+            display: none;
+            backdrop-filter: blur(10px);
+            border: 1px solid #555;
+        }
+
+        .power-menu.active {
+            display: block;
+        }
+
+        .power-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .power-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .power-item img {
+            width: 16px;
+            height: 16px;
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .terminal {
-                padding: 5px;
+            .window {
+                width: 100%;
+                height: 80%;
+                top: 10%;
+                left: 0;
             }
-            .kali-menu-item {
-                padding: 5px 8px;
-                font-size: 12px;
+            
+            .applications-menu {
+                width: 90%;
+                left: 5%;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Kali Menu Bar -->
-    <div class="kali-menu">
-        <div class="kali-menu-item">
-            Applications
-            <div class="dropdown">
-                <div class="dropdown-item" onclick="openTool('nmap')">Information Gathering</div>
-                <div class="dropdown-item" onclick="openTool('metasploit')">Vulnerability Analysis</div>
-                <div class="dropdown-item" onclick="openTool('aircrack')">Wireless Attacks</div>
-                <div class="dropdown-item" onclick="openTool('sqlmap')">Web Applications</div>
-                <div class="dropdown-item" onclick="openTool('hydra')">Password Attacks</div>
-                <div class="dropdown-item" onclick="openTool('wireshark')">Sniffing & Spoofing</div>
+    <!-- Desktop -->
+    <div class="desktop" id="desktop">
+        <div class="desktop-icons">
+            <div class="desktop-icon" onclick="openFileManager()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Flat_tick_icon.svg" alt="Home">
+                <span>Home</span>
             </div>
-        </div>
-        <div class="kali-menu-item">
-            Places
-            <div class="dropdown">
-                <div class="dropdown-item" onclick="runCommand('ls')">Home Folder</div>
-                <div class="dropdown-item" onclick="runCommand('cd /usr/share; ls')">System Files</div>
-                <div class="dropdown-item" onclick="runCommand('cd /var/www; ls')">Web Server</div>
+            <div class="desktop-icon" onclick="openTerminal()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/59/Emblem-terminal.svg" alt="Terminal">
+                <span>Terminal</span>
             </div>
-        </div>
-        <div class="kali-menu-item" onclick="runCommand('help')">
-            Help
-        </div>
-        <div class="kali-menu-item" style="margin-left: auto;" onclick="shutdown()">
-            Power
-        </div>
-    </div>
-
-    <!-- Main Terminal -->
-    <div class="terminal">
-        <div class="terminal-header">
-            <div class="terminal-title">root@kali:~</div>
-            <div class="terminal-controls">
-                <div class="control-btn close" onclick="minimizeTerminal()"></div>
-                <div class="control-btn minimize" onclick="minimizeTerminal()"></div>
-                <div class="control-btn maximize" onclick="maximizeTerminal()"></div>
-            </div>
-        </div>
-        <div class="terminal-body" id="terminal-output">
-            <div class="output">
-Kali Linux 2023.4
-Linux kali 5.18.0-kali5-amd64 #1 SMP PREEMPT_DYNAMIC Debian 5.18.5-1kali6 (2022-07-07) x86_64 GNU/Linux
-
-The programs included with the Kali GNU/Linux system are free software;
-the exact distribution terms for each program are described in the
-individual files in /usr/share/doc/*/copyright.
-
-Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-permitted by applicable law.
-            </div>
-            <div class="prompt">
-                <span class="prompt-user">root</span>
-                <span class="prompt-symbol">@</span>
-                <span class="prompt-host">kali</span>
-                <span class="prompt-symbol">:</span>
-                <span class="prompt-path">~</span>
-                <span class="prompt-symbol">#</span>
-                <input type="text" class="command-input" id="command-input" autofocus>
+            <div class="desktop-icon" onclick="showNotification('Welcome', 'Welcome to Kali Linux 2025 Web Simulation')">
+                <img src="https://www.kali.org/images/kali-logo.svg" alt="Kali">
+                <span>About Kali</span>
             </div>
         </div>
     </div>
 
-    <!-- Tool Windows -->
-    <div class="tool-window" id="nmap-tool">
-        <div class="tool-header" id="nmap-header">
-            <div class="tool-title">Nmap - Network Mapper</div>
-            <div class="tool-close" onclick="closeTool('nmap')">×</div>
-        </div>
-        <div class="tool-body">
-            <div class="output">
-Nmap 7.92 ( https://nmap.org )
-Usage: nmap [Scan Type(s)] [Options] {target specification}
-
-TARGET SPECIFICATION:
-  Can pass hostnames, IP addresses, networks, etc.
-  Ex: scanme.nmap.org, microsoft.com/24, 192.168.0.1; 10.0.0-255.1-254
-
-SCAN TECHNIQUES:
-  -sS/sT/sA/sW/sM: TCP SYN/Connect()/ACK/Window/Maimon scans
-  -sU: UDP Scan
-  -sN/sF/sX: TCP Null, FIN, and Xmas scans
-
-PORT SPECIFICATION AND SCAN ORDER:
-  -p <port ranges>: Only scan specified ports
-  Ex: -p22; -p1-65535; -p U:53,111,137,T:21-25,80,139,8080,S:9
-
-SERVICE/VERSION DETECTION:
-  -sV: Probe open ports to determine service/version info
-
-OS DETECTION:
-  -O: Enable OS detection
-
-OUTPUT:
-  -oN/-oX/-oS/-oG <file>: Output scan in normal, XML, s|<rIpt kIddi3,
-     and Grepable format, respectively, to the given filename.
-
-EXAMPLES:
-  nmap -v -A scanme.nmap.org
-  nmap -v -sn 192.168.0.0/16 10.0.0.0/8
-  nmap -v -iR 10000 -Pn -p 80
+    <!-- Panel (Taskbar) -->
+    <div class="panel">
+        <div class="panel-left">
+            <div class="panel-item active" id="applications-button" onclick="toggleApplicationsMenu()">
+                <img src="https://www.kali.org/images/kali-logo.svg" class="panel-icon" alt="Kali">
+                <span>Applications</span>
             </div>
-            <div class="prompt">
-                <span class="prompt-user">root</span>
-                <span class="prompt-symbol">@</span>
-                <span class="prompt-host">kali</span>
-                <span class="prompt-symbol">:</span>
-                <span class="prompt-path">~/nmap</span>
-                <span class="prompt-symbol">#</span>
-                <input type="text" class="command-input" id="nmap-input" placeholder="nmap -sV -p 1-1000 192.168.1.1">
+        </div>
+        <div class="panel-center">
+            <div class="panel-item" onclick="openTerminal()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/59/Emblem-terminal.svg" class="panel-icon" alt="Terminal">
+            </div>
+            <div class="panel-item" onclick="openFileManager()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Flat_tick_icon.svg" class="panel-icon" alt="Files">
+            </div>
+            <div class="panel-item" onclick="openBrowser()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Archlinux-icon-crystal-64.svg" class="panel-icon" alt="Browser">
+            </div>
+        </div>
+        <div class="panel-right">
+            <div class="panel-item" onclick="showNotification('Network', 'Connected to eth0 - 192.168.1.100')">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Linear_network_icon.svg" class="panel-icon" alt="Network">
+            </div>
+            <div class="panel-item" onclick="showNotification('Volume', 'Volume: 75%')">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/3f/Mute_Icon.svg" class="panel-icon" alt="Volume">
+            </div>
+            <div class="time" id="time">10:45 AM</div>
+            <div class="panel-item" id="power-button" onclick="togglePowerMenu()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/5d/Circle-icons-power.svg" class="panel-icon" alt="Power">
             </div>
         </div>
     </div>
 
-    <div class="tool-window" id="metasploit-tool">
-        <div class="tool-header" id="metasploit-header">
-            <div class="tool-title">Metasploit Framework</div>
-            <div class="tool-close" onclick="closeTool('metasploit')">×</div>
+    <!-- Applications Menu -->
+    <div class="applications-menu" id="applications-menu">
+        <div class="search-box">
+            <input type="text" placeholder="Search applications..." id="app-search">
         </div>
-        <div class="tool-body">
-            <div class="output">
-       =[ metasploit v6.2.23-dev                          ]
-+ -- --=[ 2226 exploits - 1176 auxiliary - 398 post       ]
-+ -- --=[ 867 payloads - 45 encoders - 11 nops            ]
-+ -- --=[ 9 evasion                                       ]
-
-Metasploit Documentation: https://docs.metasploit.com/
-
-msf6 > help
-
-Core Commands
-=============
-
-    Command       Description
-    -------       -----------
-    ?             Help menu
-    banner        Display an awesome metasploit banner
-    cd            Change the current working directory
-    color         Toggle color
-    connect       Communicate with a host
-    exit          Exit the console
-    get           Gets the value of a context-specific variable
-    getg          Gets the value of a global variable
-    grep          Grep the output of another command
-    help          Help menu
-    history       Show command history
-    load          Load a framework plugin
-    quit          Exit the console
-    route         Route traffic through a session
-    save          Saves the active datastores
-    sessions      Dump session listings and display information about sessions
-    set           Sets a context-specific variable to a value
-    setg          Sets a global variable to a value
-    sleep         Do nothing for the specified number of seconds
-    spool         Write console output into a file as well the screen
-    threads       View and manipulate background threads
-    unload        Unload a framework plugin
-    unset         Unsets one or more context-specific variables
-    unsetg        Unsets one or more global variables
-    version       Show the framework and console library version numbers
+        <div class="categories">
+            <div class="category active" data-category="all">All</div>
+            <div class="category" data-category="info">Information</div>
+            <div class="category" data-category="pentest">Pentesting</div>
+            <div class="category" data-category="tools">Tools</div>
+            <div class="category" data-category="settings">Settings</div>
+        </div>
+        <div class="applications-container">
+            <div class="application-group">
+                <div class="group-title">Favorites</div>
+                <div class="applications">
+                    <div class="application" onclick="openTerminal()">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/59/Emblem-terminal.svg" alt="Terminal">
+                        <span>Terminal</span>
+                    </div>
+                    <div class="application" onclick="openFileManager()">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Flat_tick_icon.svg" alt="Files">
+                        <span>Files</span>
+                    </div>
+                    <div class="application" onclick="openBrowser()">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Archlinux-icon-crystal-64.svg" alt="Browser">
+                        <span>Web Browser</span>
+                    </div>
+                </div>
             </div>
-            <div class="prompt">
-                <span class="prompt-user">msf6</span>
-                <span class="prompt-symbol">></span>
-                <input type="text" class="command-input" id="metasploit-input" placeholder="use exploit/multi/handler">
+            <div class="application-group">
+                <div class="group-title">Information Gathering</div>
+                <div class="applications">
+                    <div class="application" onclick="openTool('nmap')">
+                        <img src="https://nmap.org/images/sitelogo-nmap.svg" alt="Nmap">
+                        <span>Nmap</span>
+                    </div>
+                    <div class="application" onclick="openTool('wireshark')">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/d/df/Wireshark_icon.svg" alt="Wireshark">
+                        <span>Wireshark</span>
+                    </div>
+                    <div class="application" onclick="openTool('maltego')">
+                        <img src="https://www.maltego.com/wp-content/uploads/2020/02/maltego-logo.svg" alt="Maltego">
+                        <span>Maltego</span>
+                    </div>
+                </div>
+            </div>
+            <div class="application-group">
+                <div class="group-title">Vulnerability Analysis</div>
+                <div class="applications">
+                    <div class="application" onclick="openTool('metasploit')">
+                        <img src="https://www.offensive-security.com/wp-content/uploads/2015/04/metasploit-logo.png" alt="Metasploit">
+                        <span>Metasploit</span>
+                    </div>
+                    <div class="application" onclick="openTool('burp')">
+                        <img src="https://portswigger.net/burp/favicon.ico" alt="Burp Suite">
+                        <span>Burp Suite</span>
+                    </div>
+                    <div class="application" onclick="openTool('nikto')">
+                        <img src="https://cirt.net/images/cirt-logo.png" alt="Nikto">
+                        <span>Nikto</span>
+                    </div>
+                </div>
+            </div>
+            <div class="application-group">
+                <div class="group-title">Wireless Attacks</div>
+                <div class="applications">
+                    <div class="application" onclick="openTool('aircrack')">
+                        <img src="https://www.aircrack-ng.org/images/logo.png" alt="Aircrack">
+                        <span>Aircrack-ng</span>
+                    </div>
+                    <div class="application" onclick="openTool('kismet')">
+                        <img src="https://www.kismetwireless.net/wp-content/uploads/2016/09/kismet-logo.png" alt="Kismet">
+                        <span>Kismet</span>
+                    </div>
+                    <div class="application" onclick="openTool('reaver')">
+                        <img src="https://reaver-wps.googlecode.com/svn/wiki/reaver-logo.png" alt="Reaver">
+                        <span>Reaver</span>
+                    </div>
+                </div>
+            </div>
+            <div class="application-group">
+                <div class="group-title">Web Applications</div>
+                <div class="applications">
+                    <div class="application" onclick="openTool('sqlmap')">
+                        <img src="https://sqlmap.org/images/sqlmap_logo.png" alt="SQLmap">
+                        <span>SQLmap</span>
+                    </div>
+                    <div class="application" onclick="openTool('dirb')">
+                        <img src="https://dirb.sourceforge.net/images/dirb_logo.png" alt="DIRB">
+                        <span>DIRB</span>
+                    </div>
+                    <div class="application" onclick="openTool('wpscan')">
+                        <img src="https://wpscan.com/wp-content/uploads/2018/09/wpscan-logo.png" alt="WPScan">
+                        <span>WPScan</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="tool-window" id="aircrack-tool">
-        <div class="tool-header" id="aircrack-header">
-            <div class="tool-title">Aircrack-ng Suite</div>
-            <div class="tool-close" onclick="closeTool('aircrack')">×</div>
+    <!-- Power Menu -->
+    <div class="power-menu" id="power-menu">
+        <div class="power-item" onclick="lockScreen()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Circle-icons-lock.svg" alt="Lock">
+            <span>Lock Screen</span>
         </div>
-        <div class="tool-body">
-            <div class="output">
-Aircrack-ng 1.7 
+        <div class="power-item" onclick="suspend()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/67/Crystal_Clear_app_sleep.svg" alt="Suspend">
+            <span>Suspend</span>
+        </div>
+        <div class="power-item" onclick="restart()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Gnome-view-refresh.svg" alt="Restart">
+            <span>Restart</span>
+        </div>
+        <div class="power-item" onclick="shutdown()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5d/Circle-icons-power.svg" alt="Shutdown">
+            <span>Shutdown</span>
+        </div>
+    </div>
 
-Usage: aircrack-ng [options] <input file(s)>
-
-Common options:
-
-    -a <amode> : force attack mode (1/WEP, 2/WPA-PSK)
-    -e <essid> : target selection: network identifier
-    -b <bssid> : target selection: access point's MAC
-    -p <nbcpu> : # of CPU to use  (default: all CPUs)
-    -q         : enable quiet mode (no status output)
-    -C <macs>  : merge the given APs to a virtual one
-    -l <file>  : write key to file
-
-Static WEP cracking options:
-
-    -c         : search alpha-numeric characters only
-    -t         : search binary coded decimal chr only
-    -h         : search the numeric key for Fritz!BOX
-    -d <mask>  : debugging mask
-    -m <maddr> : MAC address to filter usable packets
-    -n <nbits> : WEP key length :  64/128/152/256/512
-    -i <index> : WEP key index (1 to 4), default: any
-    -f <fudge> : bruteforce fudge factor,  default: 2
-    -k <korek> : disable one attack method  (1 to 17)
-    -x or -x0  : disable bruteforce for last keybytes
-    -x1        : last keybyte bruteforcing  (default)
-    -x2        : enable last  2 keybytes bruteforcing
-    -X         : disable  bruteforce  multithreading
-    -y         : enable  experimental  single attack
-    -K         : enable  KoreK attacks (default)
-    -s         : show the key in ASCII while cracking
-    -P <num>   : PTW debug:  1: disable Klein, 2: PTW
-    -1         : run only 1 try to crack key with PTW
-    -M <num>   : specify maximum number of IVs to use
+    <!-- Terminal Window -->
+    <div class="window" id="terminal-window">
+        <div class="window-header" id="terminal-header">
+            <div class="window-title">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/59/Emblem-terminal.svg" alt="Terminal">
+                <span>Terminal</span>
             </div>
-            <div class="prompt">
-                <span class="prompt-user">root</span>
-                <span class="prompt-symbol">@</span>
-                <span class="prompt-host">kali</span>
-                <span class="prompt-symbol">:</span>
-                <span class="prompt-path">~/aircrack</span>
-                <span class="prompt-symbol">#</span>
-                <input type="text" class="command-input" id="aircrack-input" placeholder="aircrack-ng -w password.lst capture.cap">
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('terminal')"></div>
+                <div class="window-control maximize" onclick="maximizeWindow('terminal')"></div>
+                <div class="window-control close" onclick="closeWindow('terminal')"></div>
             </div>
         </div>
+        <div class="window-body">
+            <div class="terminal-toolbar">
+                <button class="terminal-button" onclick="runTerminalCommand('clear')">Clear</button>
+                <button class="terminal-button" onclick="runTerminalCommand('help')">Help</button>
+                <button class="terminal-button" onclick="runTerminalCommand('ls')">List Files</button>
+                <button class="terminal-button" onclick="runTerminalCommand('whoami')">Whoami</button>
+                <button class="terminal-button" onclick="runTerminalCommand('uname -a')">System Info</button>
+            </div>
+            <div class="terminal-content" id="terminal-content">
+                <div class="terminal-line">Kali Linux 2025.1</div>
+                <div class="terminal-line">Linux kali 6.5.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.5.5-1kali1 (2025-01-15) x86_64 GNU/Linux</div>
+                <div class="terminal-line"></div>
+                <div class="terminal-line">The programs included with the Kali GNU/Linux system are free software;</div>
+                <div class="terminal-line">the exact distribution terms for each program are described in the</div>
+                <div class="terminal-line">individual files in /usr/share/doc/*/copyright.</div>
+                <div class="terminal-line"></div>
+                <div class="terminal-line">Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</div>
+                <div class="terminal-line">permitted by applicable law.</div>
+                <div class="terminal-line"></div>
+                <div class="terminal-prompt">
+                    <span class="prompt-user">root</span>
+                    <span class="prompt-symbol">@</span>
+                    <span class="prompt-host">kali</span>
+                    <span class="prompt-symbol">:</span>
+                    <span class="prompt-path">~</span>
+                    <span class="prompt-symbol">#</span>
+                    <input type="text" class="terminal-input" id="terminal-input" autofocus>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Manager Window -->
+    <div class="window" id="file-manager-window">
+        <div class="window-header" id="file-manager-header">
+            <div class="window-title">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Flat_tick_icon.svg" alt="Files">
+                <span>Files</span>
+            </div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('file-manager')"></div>
+                <div class="window-control maximize" onclick="maximizeWindow('file-manager')"></div>
+                <div class="window-control close" onclick="closeWindow('file-manager')"></div>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="file-toolbar">
+                <button class="terminal-button" onclick="fileManagerAction('back')">Back</button>
+                <button class="terminal-button" onclick="fileManagerAction('forward')">Forward</button>
+                <button class="terminal-button" onclick="fileManagerAction('up')">Up</button>
+                <button class="terminal-button" onclick="fileManagerAction('home')">Home</button>
+                <button class="terminal-button" onclick="fileManagerAction('refresh')">Refresh</button>
+            </div>
+            <div class="file-manager">
+                <div class="sidebar">
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Places</div>
+                        <div class="sidebar-item" onclick="fileManagerNavigate('/home/kali')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/73/Flat_tick_icon.svg" alt="Home">
+                            <span>Home</span>
+                        </div>
+                        <div class="sidebar-item" onclick="fileManagerNavigate('/home/kali/Desktop')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gnome-desktop.svg" alt="Desktop">
+                            <span>Desktop</span>
+                        </div>
+                        <div class="sidebar-item" onclick="fileManagerNavigate('/home/kali/Documents')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/37/Emblem-documents.svg" alt="Documents">
+                            <span>Documents</span>
+                        </div>
+                        <div class="sidebar-item" onclick="fileManagerNavigate('/home/kali/Downloads')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Emblem-downloads.svg" alt="Downloads">
+                            <span>Downloads</span>
+                        </div>
+                    </div>
+                    <div class="sidebar-section">
+                        <div class="sidebar-title">Devices</div>
+                        <div class="sidebar-item" onclick="fileManagerNavigate('/media')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/3b/Hard_drive_icon.png" alt="Devices">
+                            <span>Removable Media</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="file-content">
+                    <div class="file-view" id="file-view">
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'Desktop')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Gnome-desktop.svg" alt="Desktop">
+                            <span class="file-item-name">Desktop</span>
+                        </div>
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'Documents')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/3/37/Emblem-documents.svg" alt="Documents">
+                            <span class="file-item-name">Documents</span>
+                        </div>
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'Downloads')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Emblem-downloads.svg" alt="Downloads">
+                            <span class="file-item-name">Downloads</span>
+                        </div>
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'Music')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Gnome-audio.svg" alt="Music">
+                            <span class="file-item-name">Music</span>
+                        </div>
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'Pictures')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/2/22/Emblem-photos.svg" alt="Pictures">
+                            <span class="file-item-name">Pictures</span>
+                        </div>
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'Videos')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6f/Emblem-videos.svg" alt="Videos">
+                            <span class="file-item-name">Videos</span>
+                        </div>
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'reports.pdf')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6a/Document-pdf.svg" alt="PDF">
+                            <span class="file-item-name">reports.pdf</span>
+                        </div>
+                        <div class="file-item" oncontextmenu="showFileContextMenu(event, 'scan_results.txt')">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/5/52/Document-txt.svg" alt="TXT">
+                            <span class="file-item-name">scan_results.txt</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nmap Tool Window -->
+    <div class="window" id="nmap-tool-window">
+        <div class="window-header" id="nmap-tool-header">
+            <div class="window-title">
+                <img src="https://nmap.org/images/sitelogo-nmap.svg" alt="Nmap">
+                <span>Nmap</span>
+            </div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('nmap-tool')"></div>
+                <div class="window-control maximize" onclick="maximizeWindow('nmap-tool')"></div>
+                <div class="window-control close" onclick="closeWindow('nmap-tool')"></div>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="terminal-toolbar">
+                <button class="terminal-button" onclick="runNmapCommand('nmap -sV -p 1-1000 192.168.1.1')">Quick Scan</button>
+                <button class="terminal-button" onclick="runNmapCommand('nmap -A -T4 192.168.1.1/24')">Full Scan</button>
+                <button class="terminal-button" onclick="runNmapCommand('nmap --script vuln 192.168.1.1')">Vuln Scan</button>
+                <button class="terminal-button" onclick="runNmapCommand('nmap -O 192.168.1.1')">OS Detect</button>
+                <button class="terminal-button" onclick="runNmapCommand('clear')">Clear</button>
+            </div>
+            <div class="terminal-content" id="nmap-content">
+                <div class="terminal-line">Nmap 8.95 ( https://nmap.org )</div>
+                <div class="terminal-line">Usage: nmap [Scan Type(s)] [Options] {target specification}</div>
+                <div class="terminal-line"></div>
+                <div class="terminal-line">TARGET SPECIFICATION:</div>
+                <div class="terminal-line">  Can pass hostnames, IP addresses, networks, etc.</div>
+                <div class="terminal-line">  Ex: scanme.nmap.org, microsoft.com/24, 192.168.0.1; 10.0.0-255.1-254</div>
+                <div class="terminal-line"></div>
+                <div class="terminal-line">SCAN TECHNIQUES:</div>
+                <div class="terminal-line">  -sS/sT/sA/sW/sM: TCP SYN/Connect()/ACK/Window/Maimon scans</div>
+                <div class="terminal-line">  -sU: UDP Scan</div>
+                <div class="terminal-line">  -sN/sF/sX: TCP Null, FIN, and Xmas scans</div>
+                <div class="terminal-prompt">
+                    <span class="prompt-user">root</span>
+                    <span class="prompt-symbol">@</span>
+                    <span class="prompt-host">kali</span>
+                    <span class="prompt-symbol">:</span>
+                    <span class="prompt-path">~/nmap</span>
+                    <span class="prompt-symbol">#</span>
+                    <input type="text" class="terminal-input" id="nmap-input" placeholder="nmap -sV -p 1-1000 192.168.1.1">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metasploit Tool Window -->
+    <div class="window" id="metasploit-tool-window">
+        <div class="window-header" id="metasploit-tool-header">
+            <div class="window-title">
+                <img src="https://www.offensive-security.com/wp-content/uploads/2015/04/metasploit-logo.png" alt="Metasploit">
+                <span>Metasploit</span>
+            </div>
+            <div class="window-controls">
+                <div class="window-control minimize" onclick="minimizeWindow('metasploit-tool')"></div>
+                <div class="window-control maximize" onclick="maximizeWindow('metasploit-tool')"></div>
+                <div class="window-control close" onclick="closeWindow('metasploit-tool')"></div>
+            </div>
+        </div>
+        <div class="window-body">
+            <div class="terminal-toolbar">
+                <button class="terminal-button" onclick="runMetasploitCommand('use exploit/multi/handler')">Handler</button>
+                <button class="terminal-button" onclick="runMetasploitCommand('use exploit/windows/smb/ms17_010_eternalblue')">EternalBlue</button>
+                <button class="terminal-button" onclick="runMetasploitCommand('search type:exploit platform:windows')">Search</button>
+                <button class="terminal-button" onclick="runMetasploitCommand('show options')">Options</button>
+                <button class="terminal-button" onclick="runMetasploitCommand('clear')">Clear</button>
+            </div>
+            <div class="terminal-content" id="metasploit-content">
+                <div class="terminal-line">       =[ metasploit v7.0.23-dev                          ]</div>
+                <div class="terminal-line">+ -- --=[ 2326 exploits - 1376 auxiliary - 498 post       ]</div>
+                <div class="terminal-line">+ -- --=[ 967 payloads - 55 encoders - 21 nops            ]</div>
+                <div class="terminal-line">+ -- --=[ 19 evasion                                       ]</div>
+                <div class="terminal-line"></div>
+                <div class="terminal-line">Metasploit Documentation: https://docs.metasploit.com/</div>
+                <div class="terminal-line"></div>
+                <div class="terminal-prompt">
+                    <span class="prompt-user">msf6</span>
+                    <span class="prompt-symbol">></span>
+                    <input type="text" class="terminal-input" id="metasploit-input" placeholder="use exploit/multi/handler">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-item" onclick="fileManagerAction('open')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5f/Gnome-document-open.svg" alt="Open">
+            <span>Open</span>
+        </div>
+        <div class="context-item" onclick="fileManagerAction('open-terminal')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/59/Emblem-terminal.svg" alt="Terminal">
+            <span>Open in Terminal</span>
+        </div>
+        <div class="context-separator"></div>
+        <div class="context-item" onclick="fileManagerAction('cut')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Gnome-edit-cut.svg" alt="Cut">
+            <span>Cut</span>
+        </div>
+        <div class="context-item" onclick="fileManagerAction('copy')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/5d/Gnome-edit-copy.svg" alt="Copy">
+            <span>Copy</span>
+        </div>
+        <div class="context-item" onclick="fileManagerAction('paste')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/0b/Gnome-edit-paste.svg" alt="Paste">
+            <span>Paste</span>
+        </div>
+        <div class="context-separator"></div>
+        <div class="context-item" onclick="fileManagerAction('delete')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a3/Gnome-edit-delete.svg" alt="Delete">
+            <span>Delete</span>
+        </div>
+        <div class="context-item" onclick="fileManagerAction('rename')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/8b/Gnome-edit-rename.svg" alt="Rename">
+            <span>Rename</span>
+        </div>
+        <div class="context-separator"></div>
+        <div class="context-item" onclick="fileManagerAction('properties')">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/0/0c/Gnome-document-properties.svg" alt="Properties">
+            <span>Properties</span>
+        </div>
+    </div>
+
+    <!-- Notification Area -->
+    <div class="notification-area" id="notification-area">
+        <!-- Notifications will be added here dynamically -->
     </div>
 
     <script>
@@ -441,20 +1060,103 @@ Static WEP cracking options:
         let currentDragElement = null;
         let offsetX = 0;
         let offsetY = 0;
+        let currentContextFile = null;
 
-        // Initialize the terminal
+        // Initialize the interface
         document.addEventListener('DOMContentLoaded', function() {
-            const commandInput = document.getElementById('command-input');
+            // Update time
+            updateTime();
+            setInterval(updateTime, 60000);
+
+            // Focus the terminal input when terminal is opened
+            document.getElementById('terminal-input').addEventListener('focus', function() {
+                this.parentNode.parentNode.parentNode.scrollTop = this.parentNode.parentNode.parentNode.scrollHeight;
+            });
+
+            // Add event listeners for command inputs
+            setupCommandInput('terminal-input', runTerminalCommand);
+            setupCommandInput('nmap-input', runNmapCommand);
+            setupCommandInput('metasploit-input', runMetasploitCommand);
+
+            // Add drag functionality to window headers
+            const windowHeaders = document.querySelectorAll('.window-header');
+            windowHeaders.forEach(header => {
+                header.addEventListener('mousedown', startDrag);
+            });
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+
+            // Close context menu when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.context-menu') && !e.target.hasAttribute('oncontextmenu')) {
+                    document.getElementById('context-menu').classList.remove('active');
+                }
+            });
+
+            // Close applications menu when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.applications-menu') && e.target.id !== 'applications-button') {
+                    document.getElementById('applications-menu').classList.remove('active');
+                }
+            });
+
+            // Close power menu when clicking elsewhere
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.power-menu') && e.target.id !== 'power-button') {
+                    document.getElementById('power-menu').classList.remove('active');
+                }
+            });
+
+            // Search applications
+            document.getElementById('app-search').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const applications = document.querySelectorAll('.application');
+                
+                applications.forEach(app => {
+                    const appName = app.querySelector('span').textContent.toLowerCase();
+                    if (appName.includes(searchTerm)) {
+                        app.style.display = 'flex';
+                    } else {
+                        app.style.display = 'none';
+                    }
+                });
+            });
+
+            // Switch categories
+            const categories = document.querySelectorAll('.category');
+            categories.forEach(category => {
+                category.addEventListener('click', function() {
+                    categories.forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const categoryName = this.getAttribute('data-category');
+                    const groups = document.querySelectorAll('.application-group');
+                    
+                    if (categoryName === 'all') {
+                        groups.forEach(group => group.style.display = 'block');
+                    } else {
+                        groups.forEach(group => {
+                            if (group.querySelector('.group-title').textContent.toLowerCase().includes(categoryName)) {
+                                group.style.display = 'block';
+                            } else {
+                                group.style.display = 'none';
+                            }
+                        });
+                    }
+                });
+            });
+        });
+
+        // Setup command input with history
+        function setupCommandInput(inputId, commandFunction) {
+            const input = document.getElementById(inputId);
             
-            // Focus the input field
-            commandInput.focus();
-            
-            // Add event listener for command input
-            commandInput.addEventListener('keydown', function(e) {
+            input.addEventListener('keydown', function(e) {
                 if (e.key === 'Enter') {
                     const command = this.value.trim();
                     if (command) {
-                        runCommand(command);
+                        commandFunction(command);
                         commandHistory.push(command);
                         historyIndex = commandHistory.length;
                         this.value = '';
@@ -476,29 +1178,133 @@ Static WEP cracking options:
                     }
                 }
             });
+        }
 
-            // Add drag functionality to tool windows
-            const toolHeaders = document.querySelectorAll('.tool-header');
-            toolHeaders.forEach(header => {
-                header.addEventListener('mousedown', startDrag);
+        // Update time
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            const formattedHours = hours % 12 || 12;
+            const formattedMinutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('time').textContent = `${formattedHours}:${formattedMinutes} ${ampm}`;
+        }
+
+        // Window management
+        function openWindow(windowId) {
+            document.getElementById(windowId).classList.add('active');
+            activeWindows.push(windowId);
+            bringToFront(windowId);
+        }
+
+        function closeWindow(windowId) {
+            document.getElementById(windowId).classList.remove('active');
+            activeWindows = activeWindows.filter(id => id !== windowId);
+        }
+
+        function minimizeWindow(windowId) {
+            // In a real implementation, this would minimize the window
+            showNotification('Window minimized', `${windowId.replace('-', ' ')} window minimized`);
+        }
+
+        function maximizeWindow(windowId) {
+            const windowElement = document.getElementById(windowId);
+            if (windowElement.style.width === '100%' && windowElement.style.height === '100%') {
+                windowElement.style.width = '800px';
+                windowElement.style.height = '500px';
+                windowElement.style.top = '100px';
+                windowElement.style.left = '100px';
+            } else {
+                windowElement.style.width = '100%';
+                windowElement.style.height = '100%';
+                windowElement.style.top = '0';
+                windowElement.style.left = '0';
+            }
+        }
+
+        function bringToFront(windowId) {
+            const windows = document.querySelectorAll('.window');
+            let maxZIndex = 10;
+            
+            windows.forEach(window => {
+                const zIndex = parseInt(window.style.zIndex || '100');
+                if (zIndex > maxZIndex) maxZIndex = zIndex;
             });
+            
+            document.getElementById(windowId).style.zIndex = maxZIndex + 1;
+        }
 
-            document.addEventListener('mousemove', drag);
-            document.addEventListener('mouseup', stopDrag);
-        });
+        // Drag and drop functions for windows
+        function startDrag(e) {
+            if (e.target.classList.contains('window-control')) return;
+            
+            isDragging = true;
+            currentDragElement = e.target.closest('.window');
+            const rect = currentDragElement.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            
+            // Bring to front
+            bringToFront(currentDragElement.id);
+        }
 
-        // Run command function
-        function runCommand(command) {
-            const terminalOutput = document.getElementById('terminal-output');
-            const prompt = document.querySelector('.prompt').cloneNode(true);
-            const input = prompt.querySelector('.command-input');
+        function drag(e) {
+            if (!isDragging) return;
+            
+            currentDragElement.style.left = (e.clientX - offsetX) + 'px';
+            currentDragElement.style.top = (e.clientY - offsetY) + 'px';
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            currentDragElement = null;
+        }
+
+        // Menu functions
+        function toggleApplicationsMenu() {
+            document.getElementById('applications-menu').classList.toggle('active');
+            document.getElementById('power-menu').classList.remove('active');
+        }
+
+        function togglePowerMenu() {
+            document.getElementById('power-menu').classList.toggle('active');
+            document.getElementById('applications-menu').classList.remove('active');
+        }
+
+        // Application functions
+        function openTerminal() {
+            openWindow('terminal-window');
+            document.getElementById('applications-menu').classList.remove('active');
+        }
+
+        function openFileManager() {
+            openWindow('file-manager-window');
+            document.getElementById('applications-menu').classList.remove('active');
+        }
+
+        function openBrowser() {
+            showNotification('Web Browser', 'Opening Firefox ESR...');
+            document.getElementById('applications-menu').classList.remove('active');
+        }
+
+        function openTool(tool) {
+            openWindow(`${tool}-tool-window`);
+            document.getElementById('applications-menu').classList.remove('active');
+        }
+
+        // Terminal functions
+        function runTerminalCommand(command) {
+            const terminalContent = document.getElementById('terminal-content');
+            const prompt = document.querySelector('#terminal-content .terminal-prompt').cloneNode(true);
+            const input = prompt.querySelector('.terminal-input');
             input.removeAttribute('id');
             input.readOnly = true;
             input.value = command;
             
             // Create output element
             const output = document.createElement('div');
-            output.className = 'output';
+            output.className = 'terminal-line';
             
             // Process commands
             let result = '';
@@ -509,21 +1315,26 @@ help - Show this help message
 clear - Clear the terminal
 ls - List directory contents
 cd - Change directory
-nmap - Network exploration tool
-msfconsole - Metasploit framework
-aircrack-ng - Wireless security tool
-sqlmap - SQL injection tool
-hydra - Password cracking tool
-wireshark - Network protocol analyzer
 whoami - Show current user
 uname -a - Show system information
 date - Show current date and time
 exit - Close the terminal`;
                     break;
                 case 'clear':
-                    terminalOutput.innerHTML = '';
-                    terminalOutput.appendChild(prompt);
-                    prompt.querySelector('.command-input').focus();
+                    terminalContent.innerHTML = `
+                        <div class="terminal-line">Kali Linux 2025.1</div>
+                        <div class="terminal-line">Linux kali 6.5.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.5.5-1kali1 (2025-01-15) x86_64 GNU/Linux</div>
+                        <div class="terminal-line"></div>
+                        <div class="terminal-line">The programs included with the Kali GNU/Linux system are free software;</div>
+                        <div class="terminal-line">the exact distribution terms for each program are described in the</div>
+                        <div class="terminal-line">individual files in /usr/share/doc/*/copyright.</div>
+                        <div class="terminal-line"></div>
+                        <div class="terminal-line">Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent</div>
+                        <div class="terminal-line">permitted by applicable law.</div>
+                        <div class="terminal-line"></div>
+                    `;
+                    terminalContent.appendChild(prompt);
+                    prompt.querySelector('.terminal-input').focus();
                     return;
                 case 'ls':
                     result = `Desktop    Downloads  Pictures  Templates
@@ -537,128 +1348,202 @@ Documents  Music      Public    Videos`;
                     break;
                 case 'uname':
                 case 'uname -a':
-                    result = 'Linux kali 5.18.0-kali5-amd64 #1 SMP PREEMPT_DYNAMIC Debian 5.18.5-1kali6 (2022-07-07) x86_64 GNU/Linux';
+                    result = 'Linux kali 6.5.0-kali3-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.5.5-1kali1 (2025-01-15) x86_64 GNU/Linux';
                     break;
                 case 'date':
                     result = new Date().toString();
                     break;
-                case 'nmap':
-                    openTool('nmap');
-                    result = 'Opening Nmap GUI...';
-                    break;
-                case 'msfconsole':
-                    openTool('metasploit');
-                    result = 'Opening Metasploit Framework...';
-                    break;
-                case 'aircrack-ng':
-                    openTool('aircrack');
-                    result = 'Opening Aircrack-ng Suite...';
-                    break;
                 case 'exit':
-                    shutdown();
-                    break;
+                    closeWindow('terminal-window');
+                    return;
                 default:
                     result = `bash: ${command}: command not found\nTry 'help' for a list of available commands.`;
             }
             
             output.textContent = result;
-            terminalOutput.appendChild(output);
-            terminalOutput.appendChild(prompt);
-            prompt.querySelector('.command-input').focus();
+            terminalContent.appendChild(output);
+            terminalContent.appendChild(prompt);
+            prompt.querySelector('.terminal-input').focus();
             
             // Scroll to bottom
-            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            terminalContent.scrollTop = terminalContent.scrollHeight;
         }
 
-        // Tool window functions
-        function openTool(tool) {
-            closeAllTools(); // Close other tools first
-            const toolWindow = document.getElementById(`${tool}-tool`);
-            toolWindow.style.display = 'block';
-            activeWindows.push(tool);
+        // Nmap functions
+        function runNmapCommand(command) {
+            const nmapContent = document.getElementById('nmap-content');
+            const prompt = document.querySelector('#nmap-content .terminal-prompt').cloneNode(true);
+            const input = prompt.querySelector('.terminal-input');
+            input.removeAttribute('id');
+            input.readOnly = true;
+            input.value = command;
             
-            // Focus the input field in the tool
-            const inputField = document.getElementById(`${tool}-input`);
-            if (inputField) {
-                inputField.focus();
-                
-                // Add event listener for tool input
-                inputField.addEventListener('keydown', function(e) {
-                    if (e.key === 'Enter') {
-                        const command = this.value.trim();
-                        if (command) {
-                            // In a real implementation, you would process the tool-specific command here
-                            const toolBody = this.parentNode.parentNode;
-                            const output = document.createElement('div');
-                            output.className = 'output';
-                            output.textContent = `$ ${command}\n[This is a simulation. In a real Kali Linux, this would execute ${command}]`;
-                            toolBody.insertBefore(output, this.parentNode);
-                            this.value = '';
-                            
-                            // Scroll to bottom
-                            toolBody.scrollTop = toolBody.scrollHeight;
-                        }
-                    }
-                });
+            // Create output element
+            const output = document.createElement('div');
+            output.className = 'terminal-line';
+            
+            // Process commands
+            let result = '';
+            if (command === 'clear') {
+                nmapContent.innerHTML = `
+                    <div class="terminal-line">Nmap 8.95 ( https://nmap.org )</div>
+                    <div class="terminal-line">Usage: nmap [Scan Type(s)] [Options] {target specification}</div>
+                `;
+                nmapContent.appendChild(prompt);
+                prompt.querySelector('.terminal-input').focus();
+                return;
+            } else {
+                result = `Starting Nmap 8.95 ( https://nmap.org ) at ${new Date().toLocaleString()}
+[Simulation] Running: ${command}
+[This is a simulation. In a real Kali Linux, this would execute the nmap command]`;
+            }
+            
+            output.textContent = result;
+            nmapContent.appendChild(output);
+            nmapContent.appendChild(prompt);
+            prompt.querySelector('.terminal-input').focus();
+            
+            // Scroll to bottom
+            nmapContent.scrollTop = nmapContent.scrollHeight;
+        }
+
+        // Metasploit functions
+        function runMetasploitCommand(command) {
+            const metasploitContent = document.getElementById('metasploit-content');
+            const prompt = document.querySelector('#metasploit-content .terminal-prompt').cloneNode(true);
+            const input = prompt.querySelector('.terminal-input');
+            input.removeAttribute('id');
+            input.readOnly = true;
+            input.value = command;
+            
+            // Create output element
+            const output = document.createElement('div');
+            output.className = 'terminal-line';
+            
+            // Process commands
+            let result = '';
+            if (command === 'clear') {
+                metasploitContent.innerHTML = `
+                    <div class="terminal-line">       =[ metasploit v7.0.23-dev                          ]</div>
+                    <div class="terminal-line">+ -- --=[ 2326 exploits - 1376 auxiliary - 498 post       ]</div>
+                    <div class="terminal-line">+ -- --=[ 967 payloads - 55 encoders - 21 nops            ]</div>
+                    <div class="terminal-line">+ -- --=[ 19 evasion                                       ]</div>
+                    <div class="terminal-line"></div>
+                    <div class="terminal-line">Metasploit Documentation: https://docs.metasploit.com/</div>
+                    <div class="terminal-line"></div>
+                `;
+                metasploitContent.appendChild(prompt);
+                prompt.querySelector('.terminal-input').focus();
+                return;
+            } else {
+                result = `[Simulation] Running: ${command}
+[This is a simulation. In a real Kali Linux, this would execute the Metasploit command]`;
+            }
+            
+            output.textContent = result;
+            metasploitContent.appendChild(output);
+            metasploitContent.appendChild(prompt);
+            prompt.querySelector('.terminal-input').focus();
+            
+            // Scroll to bottom
+            metasploitContent.scrollTop = metasploitContent.scrollHeight;
+        }
+
+        // File manager functions
+        function fileManagerNavigate(path) {
+            showNotification('File Manager', `Navigating to ${path}`);
+        }
+
+        function fileManagerAction(action) {
+            if (currentContextFile) {
+                showNotification('File Manager', `${action} ${currentContextFile}`);
+            } else {
+                showNotification('File Manager', action);
+            }
+            document.getElementById('context-menu').classList.remove('active');
+        }
+
+        function showFileContextMenu(event, filename) {
+            event.preventDefault();
+            currentContextFile = filename;
+            
+            const contextMenu = document.getElementById('context-menu');
+            contextMenu.style.left = `${event.clientX}px`;
+            contextMenu.style.top = `${event.clientY}px`;
+            contextMenu.classList.add('active');
+            
+            // Bring to front
+            contextMenu.style.zIndex = '2000';
+        }
+
+        // Power functions
+        function lockScreen() {
+            showNotification('System', 'Locking screen...');
+            document.getElementById('power-menu').classList.remove('active');
+        }
+
+        function suspend() {
+            if (confirm('Suspend system?')) {
+                showNotification('System', 'Suspending...');
+                document.getElementById('power-menu').classList.remove('active');
             }
         }
 
-        function closeTool(tool) {
-            const toolWindow = document.getElementById(`${tool}-tool`);
-            toolWindow.style.display = 'none';
-            activeWindows = activeWindows.filter(item => item !== tool);
-            document.getElementById('command-input').focus();
-        }
-
-        function closeAllTools() {
-            activeWindows.forEach(tool => {
-                document.getElementById(`${tool}-tool`).style.display = 'none';
-            });
-            activeWindows = [];
-        }
-
-        // Terminal control functions
-        function minimizeTerminal() {
-            alert('Terminal minimized (simulated)');
-        }
-
-        function maximizeTerminal() {
-            alert('Terminal maximized (simulated)');
+        function restart() {
+            if (confirm('Restart system?')) {
+                showNotification('System', 'Restarting...');
+                document.getElementById('power-menu').classList.remove('active');
+            }
         }
 
         function shutdown() {
-            if (confirm('Are you sure you want to shutdown this Kali Linux session?')) {
-                document.body.innerHTML = '<div style="background: #000; color: #0f0; height: 100vh; display: flex; justify-content: center; align-items: center; font-family: monospace; font-size: 24px;">System halted. Power down.</div>';
+            if (confirm('Shutdown system?')) {
+                document.body.innerHTML = `
+                    <div style="
+                        background: #000;
+                        color: #0f0;
+                        height: 100vh;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        font-family: monospace;
+                        font-size: 24px;
+                    ">
+                        System halted. Power down.
+                    </div>
+                `;
+            } else {
+                document.getElementById('power-menu').classList.remove('active');
             }
         }
 
-        // Drag and drop functions for tool windows
-        function startDrag(e) {
-            if (e.target.classList.contains('tool-close')) return;
+        // Notification functions
+        function showNotification(title, message) {
+            const notificationArea = document.getElementById('notification-area');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
             
-            isDragging = true;
-            currentDragElement = e.target.closest('.tool-window');
-            const rect = currentDragElement.getBoundingClientRect();
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
+            notification.innerHTML = `
+                <div class="notification-header">
+                    <div class="notification-title">
+                        <img src="https://www.kali.org/images/kali-logo.svg" alt="Kali">
+                        <span>${title}</span>
+                    </div>
+                    <div class="notification-close" onclick="this.parentNode.parentNode.remove()">×</div>
+                </div>
+                <div class="notification-body">${message}</div>
+            `;
             
-            // Bring to front
-            document.querySelectorAll('.tool-window').forEach(window => {
-                window.style.zIndex = 10;
-            });
-            currentDragElement.style.zIndex = 100;
-        }
-
-        function drag(e) {
-            if (!isDragging) return;
+            notificationArea.appendChild(notification);
             
-            currentDragElement.style.left = (e.clientX - offsetX) + 'px';
-            currentDragElement.style.top = (e.clientY - offsetY) + 'px';
-        }
-
-        function stopDrag() {
-            isDragging = false;
-            currentDragElement = null;
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
         }
     </script>
 </body>
