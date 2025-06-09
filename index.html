@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kali Linux Web Interface</title>
+    <style>
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            background-color: #000;
+            color: #0f0;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Terminal Style */
+        .terminal {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #111;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .terminal-title {
+            font-weight: bold;
+        }
+
+        .terminal-controls {
+            display: flex;
+        }
+
+        .control-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 5px;
+        }
+
+        .close {
+            background-color: #ff5f56;
+        }
+
+        .minimize {
+            background-color: #ffbd2e;
+        }
+
+        .maximize {
+            background-color: #27c93f;
+        }
+
+        .terminal-body {
+            flex-grow: 1;
+            background-color: #111;
+            padding: 15px;
+            overflow-y: auto;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            height: calc(100% - 30px);
+        }
+
+        .prompt {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        .prompt-user {
+            color: #4af;
+            margin-right: 5px;
+        }
+
+        .prompt-host {
+            color: #f84;
+            margin-right: 5px;
+        }
+
+        .prompt-path {
+            color: #8f8;
+            margin-right: 5px;
+        }
+
+        .prompt-symbol {
+            margin-right: 5px;
+        }
+
+        .command-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            color: #0f0;
+            outline: none;
+        }
+
+        .output {
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+
+        /* Kali Menu */
+        .kali-menu {
+            display: flex;
+            background-color: #111;
+            padding: 5px;
+            border-bottom: 1px solid #333;
+        }
+
+        .kali-menu-item {
+            padding: 5px 15px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .kali-menu-item:hover {
+            background-color: #333;
+        }
+
+        .dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #222;
+            min-width: 200px;
+            z-index: 1;
+            border: 1px solid #333;
+        }
+
+        .kali-menu-item:hover .dropdown {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 8px 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .dropdown-item:hover {
+            background-color: #444;
+        }
+
+        /* Tool Windows */
+        .tool-window {
+            display: none;
+            position: absolute;
+            top: 100px;
+            left: 100px;
+            width: 600px;
+            height: 400px;
+            background-color: #111;
+            border: 1px solid #333;
+            border-radius: 5px;
+            z-index: 10;
+        }
+
+        .tool-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 10px;
+            background-color: #222;
+            border-bottom: 1px solid #333;
+            cursor: move;
+        }
+
+        .tool-title {
+            font-weight: bold;
+        }
+
+        .tool-close {
+            cursor: pointer;
+            padding: 0 5px;
+        }
+
+        .tool-body {
+            padding: 15px;
+            height: calc(100% - 30px);
+            overflow-y: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .terminal {
+                padding: 5px;
+            }
+            .kali-menu-item {
+                padding: 5px 8px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Kali Menu Bar -->
+    <div class="kali-menu">
+        <div class="kali-menu-item">
+            Applications
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="openTool('nmap')">Information Gathering</div>
+                <div class="dropdown-item" onclick="openTool('metasploit')">Vulnerability Analysis</div>
+                <div class="dropdown-item" onclick="openTool('aircrack')">Wireless Attacks</div>
+                <div class="dropdown-item" onclick="openTool('sqlmap')">Web Applications</div>
+                <div class="dropdown-item" onclick="openTool('hydra')">Password Attacks</div>
+                <div class="dropdown-item" onclick="openTool('wireshark')">Sniffing & Spoofing</div>
+            </div>
+        </div>
+        <div class="kali-menu-item">
+            Places
+            <div class="dropdown">
+                <div class="dropdown-item" onclick="runCommand('ls')">Home Folder</div>
+                <div class="dropdown-item" onclick="runCommand('cd /usr/share; ls')">System Files</div>
+                <div class="dropdown-item" onclick="runCommand('cd /var/www; ls')">Web Server</div>
+            </div>
+        </div>
+        <div class="kali-menu-item" onclick="runCommand('help')">
+            Help
+        </div>
+        <div class="kali-menu-item" style="margin-left: auto;" onclick="shutdown()">
+            Power
+        </div>
+    </div>
+
+    <!-- Main Terminal -->
+    <div class="terminal">
+        <div class="terminal-header">
+            <div class="terminal-title">root@kali:~</div>
+            <div class="terminal-controls">
+                <div class="control-btn close" onclick="minimizeTerminal()"></div>
+                <div class="control-btn minimize" onclick="minimizeTerminal()"></div>
+                <div class="control-btn maximize" onclick="maximizeTerminal()"></div>
+            </div>
+        </div>
+        <div class="terminal-body" id="terminal-output">
+            <div class="output">
+Kali Linux 2023.4
+Linux kali 5.18.0-kali5-amd64 #1 SMP PREEMPT_DYNAMIC Debian 5.18.5-1kali6 (2022-07-07) x86_64 GNU/Linux
+
+The programs included with the Kali GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Kali GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+            </div>
+            <div class="prompt">
+                <span class="prompt-user">root</span>
+                <span class="prompt-symbol">@</span>
+                <span class="prompt-host">kali</span>
+                <span class="prompt-symbol">:</span>
+                <span class="prompt-path">~</span>
+                <span class="prompt-symbol">#</span>
+                <input type="text" class="command-input" id="command-input" autofocus>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tool Windows -->
+    <div class="tool-window" id="nmap-tool">
+        <div class="tool-header" id="nmap-header">
+            <div class="tool-title">Nmap - Network Mapper</div>
+            <div class="tool-close" onclick="closeTool('nmap')">×</div>
+        </div>
+        <div class="tool-body">
+            <div class="output">
+Nmap 7.92 ( https://nmap.org )
+Usage: nmap [Scan Type(s)] [Options] {target specification}
+
+TARGET SPECIFICATION:
+  Can pass hostnames, IP addresses, networks, etc.
+  Ex: scanme.nmap.org, microsoft.com/24, 192.168.0.1; 10.0.0-255.1-254
+
+SCAN TECHNIQUES:
+  -sS/sT/sA/sW/sM: TCP SYN/Connect()/ACK/Window/Maimon scans
+  -sU: UDP Scan
+  -sN/sF/sX: TCP Null, FIN, and Xmas scans
+
+PORT SPECIFICATION AND SCAN ORDER:
+  -p <port ranges>: Only scan specified ports
+  Ex: -p22; -p1-65535; -p U:53,111,137,T:21-25,80,139,8080,S:9
+
+SERVICE/VERSION DETECTION:
+  -sV: Probe open ports to determine service/version info
+
+OS DETECTION:
+  -O: Enable OS detection
+
+OUTPUT:
+  -oN/-oX/-oS/-oG <file>: Output scan in normal, XML, s|<rIpt kIddi3,
+     and Grepable format, respectively, to the given filename.
+
+EXAMPLES:
+  nmap -v -A scanme.nmap.org
+  nmap -v -sn 192.168.0.0/16 10.0.0.0/8
+  nmap -v -iR 10000 -Pn -p 80
+            </div>
+            <div class="prompt">
+                <span class="prompt-user">root</span>
+                <span class="prompt-symbol">@</span>
+                <span class="prompt-host">kali</span>
+                <span class="prompt-symbol">:</span>
+                <span class="prompt-path">~/nmap</span>
+                <span class="prompt-symbol">#</span>
+                <input type="text" class="command-input" id="nmap-input" placeholder="nmap -sV -p 1-1000 192.168.1.1">
+            </div>
+        </div>
+    </div>
+
+    <div class="tool-window" id="metasploit-tool">
+        <div class="tool-header" id="metasploit-header">
+            <div class="tool-title">Metasploit Framework</div>
+            <div class="tool-close" onclick="closeTool('metasploit')">×</div>
+        </div>
+        <div class="tool-body">
+            <div class="output">
+       =[ metasploit v6.2.23-dev                          ]
++ -- --=[ 2226 exploits - 1176 auxiliary - 398 post       ]
++ -- --=[ 867 payloads - 45 encoders - 11 nops            ]
++ -- --=[ 9 evasion                                       ]
+
+Metasploit Documentation: https://docs.metasploit.com/
+
+msf6 > help
+
+Core Commands
+=============
+
+    Command       Description
+    -------       -----------
+    ?             Help menu
+    banner        Display an awesome metasploit banner
+    cd            Change the current working directory
+    color         Toggle color
+    connect       Communicate with a host
+    exit          Exit the console
+    get           Gets the value of a context-specific variable
+    getg          Gets the value of a global variable
+    grep          Grep the output of another command
+    help          Help menu
+    history       Show command history
+    load          Load a framework plugin
+    quit          Exit the console
+    route         Route traffic through a session
+    save          Saves the active datastores
+    sessions      Dump session listings and display information about sessions
+    set           Sets a context-specific variable to a value
+    setg          Sets a global variable to a value
+    sleep         Do nothing for the specified number of seconds
+    spool         Write console output into a file as well the screen
+    threads       View and manipulate background threads
+    unload        Unload a framework plugin
+    unset         Unsets one or more context-specific variables
+    unsetg        Unsets one or more global variables
+    version       Show the framework and console library version numbers
+            </div>
+            <div class="prompt">
+                <span class="prompt-user">msf6</span>
+                <span class="prompt-symbol">></span>
+                <input type="text" class="command-input" id="metasploit-input" placeholder="use exploit/multi/handler">
+            </div>
+        </div>
+    </div>
+
+    <div class="tool-window" id="aircrack-tool">
+        <div class="tool-header" id="aircrack-header">
+            <div class="tool-title">Aircrack-ng Suite</div>
+            <div class="tool-close" onclick="closeTool('aircrack')">×</div>
+        </div>
+        <div class="tool-body">
+            <div class="output">
+Aircrack-ng 1.7 
+
+Usage: aircrack-ng [options] <input file(s)>
+
+Common options:
+
+    -a <amode> : force attack mode (1/WEP, 2/WPA-PSK)
+    -e <essid> : target selection: network identifier
+    -b <bssid> : target selection: access point's MAC
+    -p <nbcpu> : # of CPU to use  (default: all CPUs)
+    -q         : enable quiet mode (no status output)
+    -C <macs>  : merge the given APs to a virtual one
+    -l <file>  : write key to file
+
+Static WEP cracking options:
+
+    -c         : search alpha-numeric characters only
+    -t         : search binary coded decimal chr only
+    -h         : search the numeric key for Fritz!BOX
+    -d <mask>  : debugging mask
+    -m <maddr> : MAC address to filter usable packets
+    -n <nbits> : WEP key length :  64/128/152/256/512
+    -i <index> : WEP key index (1 to 4), default: any
+    -f <fudge> : bruteforce fudge factor,  default: 2
+    -k <korek> : disable one attack method  (1 to 17)
+    -x or -x0  : disable bruteforce for last keybytes
+    -x1        : last keybyte bruteforcing  (default)
+    -x2        : enable last  2 keybytes bruteforcing
+    -X         : disable  bruteforce  multithreading
+    -y         : enable  experimental  single attack
+    -K         : enable  KoreK attacks (default)
+    -s         : show the key in ASCII while cracking
+    -P <num>   : PTW debug:  1: disable Klein, 2: PTW
+    -1         : run only 1 try to crack key with PTW
+    -M <num>   : specify maximum number of IVs to use
+            </div>
+            <div class="prompt">
+                <span class="prompt-user">root</span>
+                <span class="prompt-symbol">@</span>
+                <span class="prompt-host">kali</span>
+                <span class="prompt-symbol">:</span>
+                <span class="prompt-path">~/aircrack</span>
+                <span class="prompt-symbol">#</span>
+                <input type="text" class="command-input" id="aircrack-input" placeholder="aircrack-ng -w password.lst capture.cap">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let commandHistory = [];
+        let historyIndex = -1;
+        let activeWindows = [];
+        let isDragging = false;
+        let currentDragElement = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // Initialize the terminal
+        document.addEventListener('DOMContentLoaded', function() {
+            const commandInput = document.getElementById('command-input');
+            
+            // Focus the input field
+            commandInput.focus();
+            
+            // Add event listener for command input
+            commandInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const command = this.value.trim();
+                    if (command) {
+                        runCommand(command);
+                        commandHistory.push(command);
+                        historyIndex = commandHistory.length;
+                        this.value = '';
+                    }
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (commandHistory.length > 0 && historyIndex > 0) {
+                        historyIndex--;
+                        this.value = commandHistory[historyIndex];
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        this.value = commandHistory[historyIndex];
+                    } else {
+                        historyIndex = commandHistory.length;
+                        this.value = '';
+                    }
+                }
+            });
+
+            // Add drag functionality to tool windows
+            const toolHeaders = document.querySelectorAll('.tool-header');
+            toolHeaders.forEach(header => {
+                header.addEventListener('mousedown', startDrag);
+            });
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+        });
+
+        // Run command function
+        function runCommand(command) {
+            const terminalOutput = document.getElementById('terminal-output');
+            const prompt = document.querySelector('.prompt').cloneNode(true);
+            const input = prompt.querySelector('.command-input');
+            input.removeAttribute('id');
+            input.readOnly = true;
+            input.value = command;
+            
+            // Create output element
+            const output = document.createElement('div');
+            output.className = 'output';
+            
+            // Process commands
+            let result = '';
+            switch(command.split(' ')[0]) {
+                case 'help':
+                    result = `Available commands:
+help - Show this help message
+clear - Clear the terminal
+ls - List directory contents
+cd - Change directory
+nmap - Network exploration tool
+msfconsole - Metasploit framework
+aircrack-ng - Wireless security tool
+sqlmap - SQL injection tool
+hydra - Password cracking tool
+wireshark - Network protocol analyzer
+whoami - Show current user
+uname -a - Show system information
+date - Show current date and time
+exit - Close the terminal`;
+                    break;
+                case 'clear':
+                    terminalOutput.innerHTML = '';
+                    terminalOutput.appendChild(prompt);
+                    prompt.querySelector('.command-input').focus();
+                    return;
+                case 'ls':
+                    result = `Desktop    Downloads  Pictures  Templates
+Documents  Music      Public    Videos`;
+                    break;
+                case 'cd':
+                    result = `bash: cd: ${command.split(' ')[1] || ''}: No such file or directory`;
+                    break;
+                case 'whoami':
+                    result = 'root';
+                    break;
+                case 'uname':
+                case 'uname -a':
+                    result = 'Linux kali 5.18.0-kali5-amd64 #1 SMP PREEMPT_DYNAMIC Debian 5.18.5-1kali6 (2022-07-07) x86_64 GNU/Linux';
+                    break;
+                case 'date':
+                    result = new Date().toString();
+                    break;
+                case 'nmap':
+                    openTool('nmap');
+                    result = 'Opening Nmap GUI...';
+                    break;
+                case 'msfconsole':
+                    openTool('metasploit');
+                    result = 'Opening Metasploit Framework...';
+                    break;
+                case 'aircrack-ng':
+                    openTool('aircrack');
+                    result = 'Opening Aircrack-ng Suite...';
+                    break;
+                case 'exit':
+                    shutdown();
+                    break;
+                default:
+                    result = `bash: ${command}: command not found\nTry 'help' for a list of available commands.`;
+            }
+            
+            output.textContent = result;
+            terminalOutput.appendChild(output);
+            terminalOutput.appendChild(prompt);
+            prompt.querySelector('.command-input').focus();
+            
+            // Scroll to bottom
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+        }
+
+        // Tool window functions
+        function openTool(tool) {
+            closeAllTools(); // Close other tools first
+            const toolWindow = document.getElementById(`${tool}-tool`);
+            toolWindow.style.display = 'block';
+            activeWindows.push(tool);
+            
+            // Focus the input field in the tool
+            const inputField = document.getElementById(`${tool}-input`);
+            if (inputField) {
+                inputField.focus();
+                
+                // Add event listener for tool input
+                inputField.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        const command = this.value.trim();
+                        if (command) {
+                            // In a real implementation, you would process the tool-specific command here
+                            const toolBody = this.parentNode.parentNode;
+                            const output = document.createElement('div');
+                            output.className = 'output';
+                            output.textContent = `$ ${command}\n[This is a simulation. In a real Kali Linux, this would execute ${command}]`;
+                            toolBody.insertBefore(output, this.parentNode);
+                            this.value = '';
+                            
+                            // Scroll to bottom
+                            toolBody.scrollTop = toolBody.scrollHeight;
+                        }
+                    }
+                });
+            }
+        }
+
+        function closeTool(tool) {
+            const toolWindow = document.getElementById(`${tool}-tool`);
+            toolWindow.style.display = 'none';
+            activeWindows = activeWindows.filter(item => item !== tool);
+            document.getElementById('command-input').focus();
+        }
+
+        function closeAllTools() {
+            activeWindows.forEach(tool => {
+                document.getElementById(`${tool}-tool`).style.display = 'none';
+            });
+            activeWindows = [];
+        }
+
+        // Terminal control functions
+        function minimizeTerminal() {
+            alert('Terminal minimized (simulated)');
+        }
+
+        function maximizeTerminal() {
+            alert('Terminal maximized (simulated)');
+        }
+
+        function shutdown() {
+            if (confirm('Are you sure you want to shutdown this Kali Linux session?')) {
+                document.body.innerHTML = '<div style="background: #000; color: #0f0; height: 100vh; display: flex; justify-content: center; align-items: center; font-family: monospace; font-size: 24px;">System halted. Power down.</div>';
+            }
+        }
+
+        // Drag and drop functions for tool windows
+        function startDrag(e) {
+            if (e.target.classList.contains('tool-close')) return;
+            
+            isDragging = true;
+            currentDragElement = e.target.closest('.tool-window');
+            const rect = currentDragElement.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            
+            // Bring to front
+            document.querySelectorAll('.tool-window').forEach(window => {
+                window.style.zIndex = 10;
+            });
+            currentDragElement.style.zIndex = 100;
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            
+            currentDragElement.style.left = (e.clientX - offsetX) + 'px';
+            currentDragElement.style.top = (e.clientY - offsetY) + 'px';
+        }
+
+        function stopDrag() {
+            isDragging = false;
+            currentDragElement = null;
+        }
+    </script>
+</body>
+</html>
